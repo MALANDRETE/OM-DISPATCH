@@ -1,0 +1,9 @@
+{
+  "name": "OM-DISPATCH",
+  "short_name": "OM-DISPATCH",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#08101c",
+  "theme_color": "#09111d",
+  "description": "Despacho venezolano reparado para Netlify."
+}

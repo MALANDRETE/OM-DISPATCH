@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>OM-DISPATCH</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{--bg:#08101c;--panel:#111a2d;--line:#26385d;--text:#ecf2ff;--muted:#9cafcf;--accent:#7ec3ff;--green:#57d594;--orange:#f8b84e;--purple:#bb9aff;--red:#ef6b6b;--blue:#72a0ff;--chip:#172544}
+*{box-sizing:border-box} html,body{height:100%} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,#07101a,#0b1220 45%,#0a1020);color:var(--text)}
+header{padding:20px 16px 14px;border-bottom:1px solid var(--line);background:rgba(7,16,26,.96);position:sticky;top:0;z-index:20}
+.top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start}
+h1{margin:0;font-size:30px}.subtitle{margin-top:8px;color:var(--muted);font-size:14px;line-height:1.35}
+.policy{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.pill{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:999px;background:#152344;color:var(--muted);font-size:12px}.dot{width:9px;height:9px;border-radius:999px;background:var(--green)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:14px 16px}.tabbtn{padding:10px 14px;border-radius:999px;border:1px solid var(--line);background:#162444;color:var(--muted);font-weight:700}.tabbtn.active{background:var(--accent);color:#08101c;border-color:transparent}
+.tabpane{display:none;padding:0 16px 16px}.tabpane.active{display:block}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}@media (max-width:980px){.grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(21,34,61,.96),rgba(16,25,44,.96));border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:18px}
+label{display:block;color:var(--muted);font-size:12px;margin:0 0 6px}
+input,select,textarea{width:100%;padding:12px 13px;border-radius:14px;border:1px solid var(--line);background:#0d1527;color:var(--text);outline:none}
+textarea{min-height:210px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:700px){.row{grid-template-columns:1fr}}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+button{padding:12px 14px;border-radius:14px;border:none;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#08101c}.secondary{background:#162444;color:var(--text);border:1px solid var(--line)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{padding:12px;border-radius:16px;background:#0d1527;border:1px solid var(--line)}.kpi .v{font-size:28px;font-weight:900}.kpi .l{font-size:12px;color:var(--muted);margin-top:4px}
+.small{font-size:12px;color:var(--muted);line-height:1.4}.good{color:var(--green)} .bad{color:var(--red)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:12px}.sid{color:var(--orange)} .route{color:var(--blue)} .star{color:var(--purple)}
+.routebox{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;line-height:1.5;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse} th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13px} th{font-size:11px;color:var(--muted);text-transform:uppercase}
+.mapbar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.layerbar{display:flex;flex-wrap:wrap;gap:8px}.toggle{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;background:#152344;border:1px solid var(--line);font-size:12px;color:var(--muted)} .toggle input{width:auto}
+.legend{display:flex;gap:12px;flex-wrap:wrap}.lg{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:12px}.sw{width:18px;height:4px;border-radius:4px;display:inline-block}
+.mapstage{height:62dvh;min-height:430px;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#0c1320} #map{height:100%;width:100%}
+.chartbox{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#0d1527}.chartbox img{display:block;width:100%;height:auto}
+.footer{padding:0 16px 20px;color:var(--muted);font-size:12px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#111a2d;color:var(--text);border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header><div class="top"><div><h1>OM-DISPATCH</h1><div class="subtitle">Despacho venezolano • build reparada para Netlify • ruta por LOW ATS</div></div><div class="policy"><span class="pill"><span class="dot"></span>LOW ATS ONLY</span><span class="pill"><span class="dot"></span>NO DCT</span><span class="pill"><span class="dot"></span>NO UPPER</span></div></div></header>
+<div class="tabs">
+<button class="tabbtn active" data-tab="plan">Planificador</button>
+<button class="tabbtn" data-tab="mapa">Mapa</button>
+<button class="tabbtn" data-tab="ruta">Ruta</button>
+<button class="tabbtn" data-tab="fpl">FPL</button>
+<button class="tabbtn" data-tab="datos">Datos</button>
+</div>
+
+<section class="tabpane active" id="tab-plan"><div class="grid">
+<div><div class="card"><h2>Planificador</h2>
+<div class="row"><div><label>Origen</label><select id="dep"></select></div><div><label>Destino</label><select id="dest"></select></div></div>
+<div class="row" style="margin-top:10px"><div><label>Reglas</label><select id="flightRules"><option value="IFR">IFR</option><option value="VFR">VFR</option></select></div><div><label>Tipo de vuelo</label><select id="flightType"><option value="G">G</option><option value="S">S</option><option value="N">N</option></select></div></div>
+<div class="row" style="margin-top:10px"><div><label>Callsign</label><input id="callsign" value="OM001"></div><div><label>Hora off-block UTC</label><input id="offblock" value="1200"></div></div>
+<div class="row" style="margin-top:10px"><div><label>Alterno</label><select id="alt1"></select></div><div><label>2do alterno</label><select id="alt2"></select></div></div>
+<div class="btnrow"><button class="primary" id="calcBtn">Calcular despacho</button><button class="secondary" id="toMapBtn">Ver mapa</button><button class="secondary" id="copyFpl">Copiar FPL</button></div>
+<div class="small" style="margin-top:10px">Usa conectores terminales al fix ATS más cercano cuando el aeropuerto no está conectado directamente a la red.</div>
+</div></div>
+
+<div><div class="card"><h2>Resumen operativo</h2>
+<div class="kpis">
+<div class="kpi"><div class="v" id="kDist">—</div><div class="l">Distancia NM</div></div>
+<div class="kpi"><div class="v" id="kEte">—</div><div class="l">ETE</div></div>
+<div class="kpi"><div class="v" id="kFuel">—</div><div class="l">Fuel gal</div></div>
+<div class="kpi"><div class="v" id="kLevel">—</div><div class="l">Nivel</div></div>
+</div>
+<div class="small" id="operSummary" style="margin-top:12px">Selecciona un vuelo y calcula.</div>
+</div>
+<div class="card"><h2>Ruta operacional</h2><div class="chips" id="routeChips"></div><div class="routebox" id="routeText" style="margin-top:10px">—</div></div>
+</div></div></section>
+
+<section class="tabpane" id="tab-mapa">
+<div class="card"><div class="mapbar"><div><h2 style="margin-bottom:6px">Mapa funcional</h2><div class="small">Mapa dinámico para la ruta calculada.</div></div><div class="layerbar">
+<label class="toggle"><input type="checkbox" id="toggleAirports" checked> Aeródromos</label>
+<label class="toggle"><input type="checkbox" id="toggleNavaids" checked> Navaids</label>
+<label class="toggle"><input type="checkbox" id="toggleWaypoints"> Waypoints</label>
+<label class="toggle"><input type="checkbox" id="toggleRoutes" checked> ATS LOW</label>
+<label class="toggle"><input type="checkbox" id="toggleRestrictions" checked> Restricciones</label>
+</div></div>
+<div class="legend" style="margin-bottom:10px"><span class="lg"><span class="sw" style="background:var(--orange)"></span>Salida terminal</span><span class="lg"><span class="sw" style="background:var(--green)"></span>Ruta activa</span><span class="lg"><span class="sw" style="background:var(--purple)"></span>Llegada terminal</span><span class="lg"><span class="sw" style="background:var(--red)"></span>Restricción</span></div>
+<div class="mapstage"><div id="map"></div></div></div>
+<div class="card"><h2>Carta IFR low level</h2><div class="small" style="margin-bottom:10px">Referencia visual con la carta que enviaste.</div><div class="chartbox"><img src="lowchart.png" alt="Carta low level"></div></div>
+</section>
+
+<section class="tabpane" id="tab-ruta"><div class="grid">
+<div class="card"><h2>Legs</h2><table><thead><tr><th>Tramo</th><th>Aerovía</th><th>NM</th></tr></thead><tbody id="legsTable"><tr><td colspan="3" class="small">Sin cálculo.</td></tr></tbody></table></div>
+<div class="card"><h2>Restricciones</h2><div id="restrSummary" class="small">Sin cálculo.</div><table style="margin-top:10px"><thead><tr><th>ID</th><th>Nombre</th><th>Límites</th><th>Estado</th></tr></thead><tbody id="restrTable"><tr><td colspan="4" class="small">Sin cálculo.</td></tr></tbody></table></div>
+</div></section>
+
+<section class="tabpane" id="tab-fpl"><div class="card"><h2>Plan de vuelo</h2><textarea id="fplText"></textarea></div></section>
+<section class="tabpane" id="tab-datos"><div class="card"><h2>Aeródromos cargados</h2><table><thead><tr><th>ICAO</th><th>Nombre</th><th>Elevación</th></tr></thead><tbody id="airportsTable"></tbody></table></div></section>
+<div class="footer">Build reparada. Esta versión corrige el punto principal: ahora conecta los aeropuertos con la red ATS LOW usando el fix/navaid accesible más cercano.</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="data.js"></script>
+<script>
+const D = window.OMDISPATCH_DATA;
+const airportMap = new Map(D.airports.map(a=>[a.icao,a]));
+const nodeMap = new Map(D.graphNodes.map(n=>[n.id,n]));
+const lowEdges = D.graphEdges.filter(e => e.route !== 'DCT' && !String(e.route).startsWith('U'));
+const lowRouteDefs = D.routes.filter(r => !String(r.route).startsWith('U'));
+const adj = new Map();
+const indeg = new Map();
+lowEdges.forEach(e => {
+  if(!adj.has(e.from)) adj.set(e.from, []);
+  adj.get(e.from).push(e);
+  indeg.set(e.to, (indeg.get(e.to)||0)+1);
+  if(!indeg.has(e.from)) indeg.set(e.from, indeg.get(e.from)||0);
+});
+const connectedNodes = [...new Set([...adj.keys(), ...indeg.keys()].filter(id => (adj.get(id)||[]).length || indeg.get(id)))];
+
+const qs = id => document.getElementById(id);
+const fmt = (n,d=1) => Number(n).toFixed(d);
+const fmtETE = min => { if(!isFinite(min)) return '—'; const h=Math.floor(min/60), m=Math.round(min%60); return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; };
+function haversine(lat1, lon1, lat2, lon2){
+  const R=3440.065,p1=lat1*Math.PI/180,p2=lat2*Math.PI/180,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function bearing(lat1, lon1, lat2, lon2){
+  const p1=lat1*Math.PI/180,p2=lat2*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const y=Math.sin(dLon)*Math.cos(p2), x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dLon);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
+}
+function suggestedLevel(brg, rules){
+  const levels=D.rules.levels, east=brg<180;
+  return east ? (rules==='IFR'?levels.ifr_east[4]:levels.vfr_east[2]) : (rules==='IFR'?levels.ifr_west[4]:levels.vfr_west[2]);
+}
+function bestConnectorNode(ap){
+  let best = null, bestD = Infinity;
+  for(const id of connectedNodes){
+    const n = nodeMap.get(id);
+    if(!n) continue;
+    const d = haversine(ap.lat, ap.lon, n.lat, n.lon);
+    if(d < bestD){ best = id; bestD = d; }
+  }
+  return {id: best, dist: bestD};
+}
+function shortestPath(start, goal){
+  const dist=new Map([[start,0]]), prev=new Map(), used=new Set();
+  while(true){
+    let u=null,best=Infinity;
+    for(const [k,v] of dist){ if(!used.has(k) && v<best){ best=v; u=k; } }
+    if(u===null) break;
+    if(u===goal) break;
+    used.add(u);
+    for(const e of (adj.get(u)||[])){
+      const nd=best+e.distnm+0.25;
+      if(nd<(dist.get(e.to)??Infinity)){ dist.set(e.to,nd); prev.set(e.to,{node:u,edge:e}); }
+    }
+  }
+  if(!dist.has(goal)) return null;
+  const nodes=[goal], edges=[]; let cur=goal;
+  while(cur!==start){
+    const p=prev.get(cur); if(!p) break;
+    nodes.push(p.node); edges.push(p.edge); cur=p.node;
+  }
+  nodes.reverse(); edges.reverse();
+  return {nodes,edges,total:dist.get(goal)};
+}
+function summarizePath(path){
+  if(!path||!path.edges.length) return {string:'NO ROUTE', legs:[]};
+  const legs=path.edges.map(e=>({from:e.from,to:e.to,route:e.route,distnm:e.distnm}));
+  const seq=[legs[0].from, legs[0].route];
+  for(let i=0;i<legs.length;i++){
+    const leg=legs[i], next=legs[i+1];
+    seq.push(leg.to);
+    if(next && next.route!==leg.route) seq.push(next.route);
+  }
+  return {string:seq.join(' '), legs};
+}
+function dmsToDec(sign,d,m,s){ const v=(+d)+(+m)/60+(+s)/3600; return sign<0?-v:v; }
+function parseRestrictionPolygon(summary){
+  const matches=[...summary.matchAll(/(\d{2})\s?(\d{2})\s?(\d{2})N\/(\d{2,3})\s?(\d{2})\s?(\d{2})W/g)];
+  if(matches.length<3) return null;
+  return matches.map(m=>[dmsToDec(1,m[1],m[2],m[3]), dmsToDec(-1,m[4],m[5],m[6])]);
+}
+function pointInPoly(point, vs){
+  const x=point[1], y=point[0]; let inside=false;
+  for(let i=0,j=vs.length-1;i<vs.length;j=i++){
+    const xi=vs[i][1], yi=vs[i][0], xj=vs[j][1], yj=vs[j][0];
+    const intersect=((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/((yj-yi)||1e-9)+xi);
+    if(intersect) inside=!inside;
+  }
+  return inside;
+}
+function segmentsIntersect(a,b,c,d){
+  const orient=(p,q,r)=>Math.sign((q[1]-p[1])*(r[0]-q[0])-(q[0]-p[0])*(r[1]-q[1]));
+  const o1=orient(a,b,c),o2=orient(a,b,d),o3=orient(c,d,a),o4=orient(c,d,b);
+  return o1!==o2 && o3!==o4;
+}
+function segmentHitsPoly(a,b,poly){
+  if(pointInPoly(a,poly)||pointInPoly(b,poly)) return true;
+  for(let i=0;i<poly.length;i++){
+    const c=poly[i], d=poly[(i+1)%poly.length];
+    if(segmentsIntersect(a,b,c,d)) return true;
+  }
+  return false;
+}
+
+const map = L.map('map', {zoomControl:true}).setView([8.8,-66.5], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:11,minZoom:5, attribution:'&copy; OpenStreetMap'}).addTo(map);
+const layers = {airports:L.layerGroup().addTo(map), navaids:L.layerGroup().addTo(map), waypoints:L.layerGroup(), routes:L.layerGroup().addTo(map), restrictions:L.layerGroup().addTo(map), active:L.layerGroup().addTo(map)};
+const restrictionGeoms = D.restrictions.map(r => ({...r, polygon: parseRestrictionPolygon(r.summary)}));
+
+function drawStatic(){
+  Object.values(layers).forEach(l=>l.clearLayers());
+  D.airports.forEach(ap => layers.airports.addLayer(L.circleMarker([ap.lat,ap.lon], {radius:5,color:'#7ec3ff',weight:2,fillColor:'#7ec3ff',fillOpacity:.9}).bindPopup(`<strong>${ap.icao}</strong><br>${ap.name||''}`)));
+  D.navaids.forEach(n => layers.navaids.addLayer(L.circleMarker([n.lat,n.lon], {radius:4,color:'#f8b84e',weight:1.5,fillColor:'#f8b84e',fillOpacity:.9}).bindPopup(`<strong>${n.id||n.ident||n.name}</strong><br>${n.name||''}`)));
+  D.waypoints.forEach(w => layers.waypoints.addLayer(L.circleMarker([w.lat,w.lon], {radius:2.3,color:'#eef4ff',weight:1,fillColor:'#eef4ff',fillOpacity:.85}).bindPopup(`<strong>${w.id||w.name}</strong>`)));
+  const routeToSeq = new Map(lowRouteDefs.map(r => [r.route, r.sequence]));
+  for(const [route, seq] of routeToSeq){
+    const coords = seq.map(id => nodeMap.get(id)).filter(Boolean).map(n => [n.lat,n.lon]);
+    if(coords.length>1) layers.routes.addLayer(L.polyline(coords, {color:'#5379c7',weight:1.1,opacity:.82}).bindPopup(`<strong>${route}</strong>`));
+  }
+  restrictionGeoms.forEach(r => {
+    if(r.polygon) layers.restrictions.addLayer(L.polygon(r.polygon, {color:'#ef6b6b',weight:1.1,fillOpacity:.12}).bindPopup(`<strong>${r.id}</strong><br>${r.name}`));
+  });
+}
+function populateSelectors(){
+  const opts = D.airports.slice().sort((a,b)=>a.icao.localeCompare(b.icao)).map(a => `<option value="${a.icao}">${a.icao} — ${a.name||''}</option>`).join('');
+  qs('dep').innerHTML=opts; qs('dest').innerHTML=opts;
+  qs('alt1').innerHTML=`<option value="">—</option>`+opts;
+  qs('alt2').innerHTML=`<option value="">—</option>`+opts;
+  qs('dep').value='SVMI'; qs('dest').value='SVVA';
+  qs('airportsTable').innerHTML=D.airports.slice().sort((a,b)=>a.icao.localeCompare(b.icao)).map(a => `<tr><td>${a.icao}</td><td>${a.name||''}</td><td>${a.elevation||'—'}</td></tr>`).join('');
+}
+function buildFpl(dep,dest,alt1,alt2,routeText,level,ete,fuel){
+  const cs=qs('callsign').value.trim()||'OM001', rules=qs('flightRules').value, type=qs('flightType').value, offblock=qs('offblock').value.trim()||'1200';
+  return `(FPL-${cs}-${rules}${type}\n-1/R182/L-SDFGRY/S\n-${dep}${offblock}\n-N0150 ${level} ${routeText}\n-${dest}${ete.replace(':','')}${alt1?' '+alt1:''}${alt2?' '+alt2:''}\n-RMK/OM-DISPATCH GENERATED\n-E/${String(Math.floor((fuel/12))).padStart(2,'0')}${String(Math.round((fuel/12%1)*60)).padStart(2,'0')} C/WHITE BLUE A/PIC OMAR)`;
+}
+function evaluateRestrictions(path){
+  const hits=[]; if(!path) return hits;
+  const coords=path.nodes.map(id=>nodeMap.get(id)).filter(Boolean).map(n=>[n.lat,n.lon]);
+  for(const r of restrictionGeoms){
+    if(!r.polygon) continue;
+    let hit=false;
+    for(let i=0;i<coords.length-1;i++){ if(segmentHitsPoly(coords[i], coords[i+1], r.polygon)){ hit=true; break; } }
+    if(hit) hits.push(r);
+  }
+  return hits;
+}
+function drawActive(depAp,destAp,startNode,endNode,path){
+  layers.active.clearLayers(); if(!path) return;
+  const start=nodeMap.get(startNode), end=nodeMap.get(endNode);
+  if(depAp && start) layers.active.addLayer(L.polyline([[depAp.lat,depAp.lon],[start.lat,start.lon]], {color:'#f8b84e',weight:4,dashArray:'6 6'}));
+  const routeCoords=path.nodes.map(id=>nodeMap.get(id)).filter(Boolean).map(n=>[n.lat,n.lon]);
+  if(routeCoords.length>1) layers.active.addLayer(L.polyline(routeCoords, {color:'#57d594',weight:4.6}));
+  if(destAp && end) layers.active.addLayer(L.polyline([[end.lat,end.lon],[destAp.lat,destAp.lon]], {color:'#bb9aff',weight:4,dashArray:'6 6'}));
+  const pts=[[depAp.lat,depAp.lon], ...routeCoords, [destAp.lat,destAp.lon]];
+  const bounds=L.latLngBounds(pts); if(bounds.isValid()) map.fitBounds(bounds.pad(0.18));
+}
+function switchTab(name){
+  document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===name));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('active', p.id==='tab-'+name));
+  if(name==='mapa') setTimeout(()=>map.invalidateSize(), 100);
+}
+function calculate(){
+  const dep=qs('dep').value, dest=qs('dest').value;
+  if(!dep||!dest||dep===dest) return;
+  const depAp=airportMap.get(dep), destAp=airportMap.get(dest);
+  const depConn=bestConnectorNode(depAp), destConn=bestConnectorNode(destAp);
+  const path=shortestPath(depConn.id, destConn.id);
+  if(!path){
+    qs('operSummary').innerHTML=`<span class="bad">No se encontró ruta ATS LOW válida entre ${dep} y ${dest}.</span>`;
+    qs('routeText').textContent='NO ROUTE';
+    qs('legsTable').innerHTML='<tr><td colspan="3" class="small bad">Sin ruta ATS LOW.</td></tr>';
+    qs('restrTable').innerHTML='<tr><td colspan="4" class="small">Sin cálculo.</td></tr>';
+    qs('restrSummary').textContent='Sin cálculo.';
+    layers.active.clearLayers();
+    return;
+  }
+  const summary=summarizePath(path);
+  const terminalOut = depConn.dist > 2 ? `OMNIDIRECTIONAL DEPARTURE → ${depConn.id}` : `DIRECT TERMINAL CONNECT → ${depConn.id}`;
+  const terminalIn  = destConn.dist > 2 ? `${destConn.id} → TERMINAL ARRIVAL` : `${destConn.id} → ARRIVAL`;
+  const brg=bearing(depAp.lat, depAp.lon, destAp.lat, destAp.lon);
+  const level=suggestedLevel(brg, qs('flightRules').value);
+  const climb=D.aircraft.climb.find(c=>c.alt_ft>=6000)||D.aircraft.climb[D.aircraft.climb.length-1];
+  const terminalNm = depConn.dist + destConn.dist;
+  const cruiseMin=((path.total + terminalNm)/(150))*60;
+  const totalMin=climb.time_min+cruiseMin;
+  const fuel=D.aircraft.taxi_takeoff_gal+climb.fuel_gal+(cruiseMin/60)*12;
+  qs('kDist').textContent=fmt(path.total + terminalNm,1);
+  qs('kEte').textContent=fmtETE(totalMin);
+  qs('kFuel').textContent=fmt(fuel,1);
+  qs('kLevel').textContent=level;
+  qs('operSummary').innerHTML=`<span class="good">Ruta ATS LOW calculada</span><br>Salida terminal: <strong>${depConn.id}</strong> (${fmt(depConn.dist,1)} NM)<br>Llegada terminal: <strong>${destConn.id}</strong> (${fmt(destConn.dist,1)} NM)`;
+  qs('routeText').textContent=`${terminalOut}\n${summary.string}\n${terminalIn}`;
+  qs('routeChips').innerHTML=`<span class="chip sid">${depConn.id}</span>`+[...new Set(summary.legs.map(l=>l.route))].map(r=>`<span class="chip route">${r}</span>`).join('')+`<span class="chip star">${destConn.id}</span>`;
+  qs('legsTable').innerHTML=summary.legs.map(l=>`<tr><td>${l.from} → ${l.to}</td><td>${l.route}</td><td>${fmt(l.distnm,1)}</td></tr>`).join('');
+  const hits=evaluateRestrictions(path);
+  qs('restrSummary').innerHTML=hits.length?`<span class="bad">La ruta cruza ${hits.length} restricción(es).</span>`:`<span class="good">Sin cruces detectados.</span>`;
+  qs('restrTable').innerHTML=hits.length?hits.map(r=>`<tr><td>${r.id}</td><td>${r.name}</td><td>${r.lower||'—'} / ${r.upper||'—'}</td><td class="bad">REVISAR</td></tr>`).join(''):`<tr><td colspan="4" class="small good">Sin cruces detectados.</td></tr>`;
+  qs('fplText').value=buildFpl(dep,dest,qs('alt1').value,qs('alt2').value,summary.string,level,fmtETE(totalMin),fuel);
+  drawActive(depAp,destAp,depConn.id,destConn.id,path);
+}
+populateSelectors(); drawStatic(); calculate();
+document.querySelectorAll('.tabbtn').forEach(btn=>btn.addEventListener('click', ()=>switchTab(btn.dataset.tab)));
+qs('toMapBtn').addEventListener('click', ()=>switchTab('mapa'));
+qs('calcBtn').addEventListener('click', calculate);
+qs('copyFpl').addEventListener('click', async()=>{ try{ await navigator.clipboard.writeText(qs('fplText').value||''); alert('FPL copiado.'); } catch(e){ alert('No se pudo copiar automáticamente.'); } });
+[['toggleAirports','airports'],['toggleNavaids','navaids'],['toggleWaypoints','waypoints'],['toggleRoutes','routes'],['toggleRestrictions','restrictions']].forEach(([id,layer])=>{ qs(id).addEventListener('change', e=>{ if(e.target.checked) map.addLayer(layers[layer]); else map.removeLayer(layers[layer]); });});
+</script>
+</body></html>
